@@ -39,7 +39,7 @@ import {
 } from '@rainbow-me/rainbowkit/wallets';
 import { Toaster } from 'react-hot-toast';
 import '@rainbow-me/rainbowkit/styles.css';
-import { ThemeProvider } from '@/app/providers/themeProvider';
+
 
 const chains = [mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
 
@@ -164,21 +164,16 @@ customTheme.colors.standby = '#ffaa00';
 
 export default function ClientProviders({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider
-            theme={customTheme}
-            modalSize="compact"
-            initialChain={baseSepolia}
-            showRecentTransactions={true}
-            coolMode={true}
-          >
-            {children}
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          theme={customTheme}
+          modalSize="compact"
+          initialChain={baseSepolia}
+          showRecentTransactions={true}
+          coolMode={true}
+        >
+          {children}
             <Toaster
               position="top-right"
               toastOptions={{
@@ -231,9 +226,8 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
                 },
               }}
             />
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </ThemeProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
