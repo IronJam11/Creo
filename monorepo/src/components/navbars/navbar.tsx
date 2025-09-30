@@ -8,7 +8,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
-import { ModeToggle } from "@/components/buttons/toggleThemeButton"
+
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
@@ -103,8 +103,6 @@ export function Navbar() {
           </NavigationMenu>
           
           <ConnectButton />
-          
-          <ModeToggle />
         </div>
       </div>
     </nav>
