@@ -373,14 +373,14 @@ export const createDifficultyLabels = async (accessToken: string, owner: string,
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         if (response.status === 422 && errorData.errors?.[0]?.code === 'already_exists') {
-          console.log(`Label ${label.name} already exists`);
+
         } else if (response.status === 404) {
           console.warn(`Repository ${owner}/${repo} not found or no access for label creation`);
         } else {
           console.warn(`Failed to create label ${label.name}:`, response.status, errorData.message || response.statusText);
         }
       } else {
-        console.log(`Successfully created label: ${label.name}`);
+
       }
     } catch (error) {
       console.warn(`Error creating label ${label.name}:`, error);

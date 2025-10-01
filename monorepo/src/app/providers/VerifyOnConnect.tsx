@@ -10,7 +10,7 @@ import {
 import { toast } from 'react-hot-toast'
 import { CONTRACT_ABI } from '@/app/config/contractABI'
 
-const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '').trim() as `0x${string}`
+const CONTRACT_ADDRESS = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x05B5C305e16382cF1C94165308b90D79A7334F50').trim() as `0x${string}`
 
 
 export default function VerifyOnConnect() {
@@ -41,7 +41,6 @@ export default function VerifyOnConnect() {
     abi: resolvedAbi,
     functionName: 'isAddressVerified',
     args: address ? [address] : undefined,
-    chainId: 11142220,
     query: {
       enabled: Boolean(isConnected && address && CONTRACT_ADDRESS),
       refetchOnMount: 'always',
@@ -59,9 +58,13 @@ export default function VerifyOnConnect() {
 
   React.useEffect(() => {
     if (error) {
-      toast.error('Could not read contract. Check network and contract address.')
+      console.warn('Contract read error:', error)
+      // Only show error if user is connected and we have a contract address
+      if (isConnected && CONTRACT_ADDRESS) {
+        toast.error('Could not verify wallet status. Please check your network connection.')
+      }
     }
-  }, [error])
+  }, [error, isConnected])
 
   // Force a check on initial mount and whenever the wallet connects/changes
   React.useEffect(() => {

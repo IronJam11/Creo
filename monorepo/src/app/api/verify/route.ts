@@ -28,17 +28,11 @@ let lastUserIdentifier: string | null = null
 
 export async function POST(req: Request) {
   try {
-    console.log('[verify] Verification request received')
+
 
     const { attestationId, proof, publicSignals, userContextData } = await req.json()
 
-    console.log('[verify] Received payload:', {
-      attestationId,
-      hasProof: !!proof,
-      hasPublicSignals: !!publicSignals,
-      userContextData,
-      userContextDataType: typeof userContextData,
-    })
+
 
     if (!proof || !publicSignals || !attestationId || !userContextData) {
       console.error('[verify] Missing required fields')
@@ -59,7 +53,7 @@ export async function POST(req: Request) {
       userContextData
     )
 
-    console.log('[verify] Verification result:', JSON.stringify(result, null, 2))
+
 
     const { isValid, isMinimumAgeValid, isOfacValid } = result.isValidDetails
 
@@ -80,7 +74,7 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString(),
       })
 
-      console.log('[verify] Verification successful. Identity commitment:', identityCommitment)
+
 
       return NextResponse.json(
         {

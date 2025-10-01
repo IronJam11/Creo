@@ -42,7 +42,7 @@ const CONTRACT_ABI = [
   }
 ] as const;
 
-const CONTRACT_ADDRESS = "0xEDd4ADd7a09ca3772EB9E4eA782c00fBFB031422" as const; // Replace with actual deployed contract address
+const CONTRACT_ADDRESS = "0x05B5C305e16382cF1C94165308b90D79A7334F50" as const; // Replace with actual deployed contract address
 
 // GitHub Issue interface
 interface GitHubIssue {
@@ -139,7 +139,7 @@ export default function CreateIssuePage() {
           
           if (userResponse.ok) {
             const scopes = userResponse.headers.get('X-OAuth-Scopes');
-            console.log('Token scopes check:', scopes);
+
             setHasRepoScope(scopes?.includes('repo') || false);
           }
         } catch (error) {
@@ -207,21 +207,11 @@ export default function CreateIssuePage() {
     try {
       const githubApi = new GitHubAPI(session.accessToken);
       const allRepos = await githubApi.getUserRepos();
-      console.log(`Found ${allRepos.length} repositories from API`);
+
       
       // For now, let's not verify each repository individually as it's slow
       // Instead, rely on the getUserRepos method to return only accessible repos
       setRepositories(allRepos);
-      console.log(`Loaded ${allRepos.length} repositories for selection`);
-      
-      // Log some repository info for debugging
-      if (allRepos.length > 0) {
-        console.log('Sample repositories:', allRepos.slice(0, 3).map(repo => ({
-          name: repo.full_name,
-          private: repo.private,
-          permissions: repo.permissions
-        })));
-      }
     } catch (error) {
       console.error('Error fetching repositories:', error);
     }
@@ -313,9 +303,7 @@ export default function CreateIssuePage() {
       const githubApi = new GitHubAPI(session.accessToken);
       const [owner, repo] = selectedRepo.split('/');
       
-      console.log('Creating issue for:', { owner, repo, selectedRepo });
-      console.log('Session user:', session.user);
-      console.log('Access token available:', !!session.accessToken);
+
       
       // Test token scopes
       try {
@@ -328,7 +316,7 @@ export default function CreateIssuePage() {
         
         if (userResponse.ok) {
           const scopes = userResponse.headers.get('X-OAuth-Scopes');
-          console.log('Token scopes:', scopes);
+
           
           if (!scopes?.includes('repo')) {
             console.warn('Token does not have repo scope - cannot create issues');
@@ -343,7 +331,7 @@ export default function CreateIssuePage() {
       try {
         // First, try to get repository info to verify access
         const repoUrl = `https://api.github.com/repos/${owner}/${repo}`;
-        console.log('Checking repository access:', repoUrl);
+
         
         const repoInfo = await fetch(repoUrl, {
           headers: {
@@ -377,7 +365,7 @@ export default function CreateIssuePage() {
           throw new Error(`You don't have write access to ${selectedRepo}. You can only create issues in repositories you own or have write access to.`);
         }
         
-        console.log('✅ Repository access verified - proceeding with issue creation');
+
       } catch (repoError) {
         console.error('Repository access error:', repoError);
         
