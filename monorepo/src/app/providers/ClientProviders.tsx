@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia } from 'wagmi/chains';
+import { mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia, celo, celoAlfajores } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import {
@@ -38,10 +38,11 @@ import {
   uniswapWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './AuthProvider';
 import '@rainbow-me/rainbowkit/styles.css';
 
 
-const chains = [mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
+const chains = [celo, celoAlfajores, mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
 
 const connectors = connectorsForWallets(
   [
@@ -116,6 +117,8 @@ const wagmiConfig = createConfig({
   chains,
   connectors,
   transports: {
+    [celo.id]: http(),
+    [celoAlfajores.id]: http(),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [optimism.id]: http(),
@@ -164,16 +167,17 @@ customTheme.colors.standby = '#ffaa00';
 
 export default function ClientProviders({ children }: { children: ReactNode }) {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          theme={customTheme}
-          modalSize="compact"
-          initialChain={baseSepolia}
-          showRecentTransactions={true}
-          coolMode={true}
-        >
-          {children}
+    <AuthProvider>
+      <WagmiProvider config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider
+            theme={customTheme}
+            modalSize="compact"
+            initialChain={celoAlfajores}
+            showRecentTransactions={true}
+            coolMode={true}
+          >
+            {children}
             <Toaster
               position="top-right"
               toastOptions={{
@@ -229,5 +233,6 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
+    </AuthProvider>
   );
 }
