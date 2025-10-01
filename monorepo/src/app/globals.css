@@ -1,5 +1,65 @@
+/* Font Imports - Must be first */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 @import "tailwindcss";
 @import "tw-animate-css";
+
+/* GT Alpina Font Family - Premium serif from Grilli Type Foundry */
+/* Note: Replace these with actual GT Alpina font files when licensed */
+
+@font-face {
+  font-family: 'GT Alpina';
+  src: url('/fonts/gt-alpina-thin.woff2') format('woff2'),
+       url('/fonts/gt-alpina-thin.woff') format('woff');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Alpina';
+  src: url('/fonts/gt-alpina-thin-italic.woff2') format('woff2'),
+       url('/fonts/gt-alpina-thin-italic.woff') format('woff');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Alpina';
+  src: url('/fonts/gt-alpina-light.woff2') format('woff2'),
+       url('/fonts/gt-alpina-light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Alpina';
+  src: url('/fonts/gt-alpina-regular.woff2') format('woff2'),
+       url('/fonts/gt-alpina-regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Alpina';
+  src: url('/fonts/gt-alpina-medium.woff2') format('woff2'),
+       url('/fonts/gt-alpina-medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GT Alpina';
+  src: url('/fonts/gt-alpina-bold.woff2') format('woff2'),
+       url('/fonts/gt-alpina-bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -44,25 +104,45 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --radius: 0px; /* Brutalist design - no rounded corners */
+  
+  /* Celo Color Palette */
+  --celo-prosperity-yellow: #FCFF52;
+  --celo-forest: #476520;
+  --celo-gypsum: #FCF6F1;
+  --celo-sand: #E7E3D4;
+  --celo-wood: #655947;
+  --celo-fig: #1E002B;
+  --celo-snow: #FFFFFF;
+  --celo-onyx: #000000;
+  --celo-success: #329F3B;
+  --celo-error: #E70532;
+  --celo-disabled: #9B9B9B;
+  --celo-sky: #7CC0FF;
+  --celo-citrus: #FF9A51;
+  --celo-jade: #56DF7C;
+  --celo-lavender: #B490FF;
+  --celo-lotus: #FFA3EB;
+  
+  /* Design System Tokens */
+  --background: var(--celo-gypsum);
+  --foreground: var(--celo-onyx);
+  --card: var(--celo-snow);
+  --card-foreground: var(--celo-onyx);
+  --popover: var(--celo-snow);
+  --popover-foreground: var(--celo-onyx);
+  --primary: var(--celo-prosperity-yellow);
+  --primary-foreground: var(--celo-onyx);
+  --secondary: var(--celo-forest);
+  --secondary-foreground: var(--celo-snow);
+  --muted: var(--celo-sand);
+  --muted-foreground: var(--celo-wood);
+  --accent: var(--celo-sky);
+  --accent-foreground: var(--celo-onyx);
+  --destructive: var(--celo-error);
+  --border: var(--celo-onyx);
+  --input: var(--celo-snow);
+  --ring: var(--celo-onyx);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -112,11 +192,121 @@
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
+/* Celo Typography Hierarchy */
+.celo-heading-1 {
+  font-family: 'GT Alpina', serif;
+  font-weight: 700;
+  font-size: 3.75rem; /* 60px */
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--celo-onyx);
+}
+
+.celo-heading-2 {
+  font-family: 'GT Alpina', serif;
+  font-weight: 700;
+  font-size: 3rem; /* 48px */
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--celo-onyx);
+}
+
+.celo-heading-3 {
+  font-family: 'GT Alpina', serif;
+  font-weight: 700;
+  font-size: 2.25rem; /* 36px */
+  line-height: 1.3;
+  color: var(--celo-onyx);
+}
+
+.celo-heading-4 {
+  font-family: 'GT Alpina', serif;
+  font-weight: 500;
+  font-size: 1.875rem; /* 30px */
+  line-height: 1.3;
+  color: var(--celo-onyx);
+}
+
+.celo-heading-5 {
+  font-family: 'GT Alpina', serif;
+  font-weight: 500;
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.4;
+  color: var(--celo-onyx);
+}
+
+.celo-body-large {
+  font-family: 'GT Alpina', serif;
+  font-weight: 400;
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.6;
+  color: var(--celo-onyx);
+}
+
+.celo-body {
+  font-family: 'GT Alpina', serif;
+  font-weight: 400;
+  font-size: 1rem; /* 16px */
+  line-height: 1.6;
+  color: var(--celo-onyx);
+}
+
+.celo-body-small {
+  font-family: 'GT Alpina', serif;
+  font-weight: 400;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+  color: var(--celo-wood);
+}
+
+.celo-caption {
+  font-family: 'GT Alpina', serif;
+  font-weight: 300;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.4;
+  color: var(--celo-wood);
+}
+
+.celo-label {
+  font-family: 'GT Alpina', serif;
+  font-weight: 700;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--celo-onyx);
+}
+
+/* Thin weight variations for special use cases */
+.celo-display-thin {
+  font-family: 'GT Alpina', serif;
+  font-weight: 100;
+  font-size: 4rem; /* 64px */
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--celo-onyx);
+}
+
+.celo-display-thin-italic {
+  font-family: 'GT Alpina', serif;
+  font-weight: 100;
+  font-style: italic;
+  font-size: 4rem; /* 64px */
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--celo-onyx);
+}
+
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: var(--ring);
+    outline-offset: 2px;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'GT Alpina', 'Inter', system-ui, sans-serif;
   }
 }
