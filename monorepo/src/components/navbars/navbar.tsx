@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -22,8 +23,14 @@ import { WEBSITE_LOGO_PATH as LOGO_PATH, WEBSITE_NAME, WEBSITE_TITLE_FONT as WEB
 export function Navbar() {
   const { data: session } = useSession();
   const { address, isConnected } = useAccount();
+  const [mounted, setMounted] = useState(false);
+  
   const bothConnected = session && isConnected;
   const needsConnection = !session || !isConnected;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-[#FCFF52] font-gt-alpina">
@@ -118,35 +125,61 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             {/* GitHub Status */}
             <div className="flex items-center gap-2">
-              {session ? (
-                <div className="bg-[#56DF7C] border-2 border-black shadow-celo-sm px-3 py-2 flex items-center gap-2">
-                  <Github className="w-4 h-4 text-black" />
-                  <span className="celo-body-small font-bold text-black">@{session.user?.githubUsername}</span>
-                </div>
+              {mounted ? (
+                session ? (
+                  <div className="relative group">
+                    <div className="bg-[#56DF7C] border-2 border-black shadow-celo-sm px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-[#4CC968] transition-colors">
+                      <Github className="w-4 h-4 text-black" />
+                      <span className="celo-body-small font-bold text-black">@{session.user?.githubUsername}</span>
+                    </div>
+                    {/* Dropdown menu */}
+                    <div className="absolute top-full right-0 mt-2 bg-white border-4 border-black shadow-celo-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 min-w-48">
+                      <div className="p-2">
+                        <div className="flex items-center gap-2 px-3 py-2 mb-2">
+                          <Github className="w-4 h-4 text-black" />
+                          <div>
+                            <p className="celo-body-small font-bold text-black">@{session.user?.githubUsername}</p>
+                            <p className="text-xs text-gray-600">{session.user?.email}</p>
+                          </div>
+                        </div>
+                        <hr className="border-black border-t-2 mb-2" />
+                        <Button
+                          onClick={() => signOut()}
+                          className="w-full bg-[#E70532] text-white border-2 border-black shadow-celo-sm px-3 py-2 flex items-center gap-2 hover:bg-red-600 rounded-none text-left justify-start"
+                        >
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="celo-body-small font-bold">Disconnect GitHub</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => signIn('github')}
+                    className="bg-[#E70532] text-white border-2 border-black shadow-celo-sm px-3 py-2 flex items-center gap-2 hover:bg-red-600 rounded-none"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="celo-body-small font-bold">Connect GitHub</span>
+                  </Button>
+                )
               ) : (
-                <Button
-                  onClick={() => signIn('github')}
-                  className="bg-[#E70532] text-white border-2 border-black shadow-celo-sm px-3 py-2 flex items-center gap-2 hover:bg-red-600 rounded-none"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="celo-body-small font-bold">Connect GitHub</span>
-                </Button>
+                // Skeleton/placeholder during hydration
+                <div className="bg-gray-200 border-2 border-black shadow-celo-sm px-3 py-2 animate-pulse">
+                  <div className="w-32 h-4 bg-gray-300 rounded"></div>
+                </div>
               )}
             </div>
 
             {/* Wallet Status */}
             <div className="flex items-center gap-2">
-              {isConnected ? (
-                <div className="bg-[#7CC0FF] border-2 border-black shadow-celo-sm px-3 py-2 flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-black" />
-                  <span className="celo-body-small font-bold text-black">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+              {mounted ? (
+                <div className="border-2 border-black shadow-celo-sm rounded-none overflow-hidden">
+                  <ConnectButton showBalance={false} />
                 </div>
               ) : (
-                <div className="bg-[#E70532] border-2 border-black shadow-celo-sm p-1 rounded-none">
-                  <div className="flex items-center gap-2 px-2">
-                    <AlertCircle className="w-4 h-4 text-white" />
-                    <ConnectButton />
-                  </div>
+                // Skeleton/placeholder during hydration
+                <div className="bg-gray-200 border-2 border-black shadow-celo-sm px-3 py-2 animate-pulse">
+                  <div className="w-24 h-4 bg-gray-300 rounded"></div>
                 </div>
               )}
             </div>
