@@ -42,7 +42,7 @@ const CONTRACT_ABI = [
   }
 ] as const;
 
-const CONTRACT_ADDRESS = "0x1234567890123456789012345678901234567890" as const; // Replace with actual deployed contract address
+const CONTRACT_ADDRESS = "0xEDd4ADd7a09ca3772EB9E4eA782c00fBFB031422" as const; // Replace with actual deployed contract address
 
 // GitHub Issue interface
 interface GitHubIssue {
@@ -64,7 +64,6 @@ interface GitHubIssue {
   }>;
 }
 
-// AI Analysis interfaces based on actual API response
 interface AnalysisResult {
   agents_discovered: number;
   agents_used: number;
