@@ -324,6 +324,15 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Pausable {
         Issue storage issue = issues[_issueId];
         return (issue.easyDuration, issue.mediumDuration, issue.hardDuration);
     }
+
+    function getAllIssues() external view returns (Issue[] memory) {
+        uint256 totalIssues = nextIssueId - 1;
+        Issue[] memory allIssues = new Issue[](totalIssues);
+        for (uint256 i = 1; i <= totalIssues; i++) {
+            allIssues[i - 1] = issues[i];
+        }
+        return allIssues;
+    }
     
     function getCreatorIssues(address _creator) external view returns (uint256[] memory) {
         return creatorIssues[_creator];
