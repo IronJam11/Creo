@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Navbar } from "@/components/navbars/navbar";
 import "./globals.css";
 import ClientProviders from "@/app/providers/ClientProviders";
+import VerifyOnConnect from "@/app/providers/VerifyOnConnect";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -25,10 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${inter.variable} font-gt-alpina bg-gypsum text-onyx antialiased`}
       >
         <ClientProviders>
           <Navbar />
+          <VerifyOnConnect />
           {children}
         </ClientProviders>
       </body>

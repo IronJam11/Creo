@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia, celo, celoAlfajores } from 'wagmi/chains';
+import { defineChain } from 'viem';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import {
@@ -41,8 +42,21 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './AuthProvider';
 import '@rainbow-me/rainbowkit/styles.css';
 
+const celoSepolia = defineChain({
+  id: 11142220,
+  name: 'Celo Sepolia',
+  nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://forno.celo-sepolia.celo-testnet.org/'] },
+    public: { http: ['https://forno.celo-sepolia.celo-testnet.org/'] },
+  },
+  blockExplorers: {
+    default: { name: 'Celo Explorer', url: 'https://explorer.celo.org/sepolia' },
+  },
+  testnet: true,
+});
 
-const chains = [celo, celoAlfajores, mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
+const chains = [celoSepolia, celo, celoAlfajores, mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
 
 const connectors = connectorsForWallets(
   [
@@ -117,6 +131,7 @@ const wagmiConfig = createConfig({
   chains,
   connectors,
   transports: {
+    [celoSepolia.id]: http('https://forno.celo-sepolia.celo-testnet.org/'),
     [celo.id]: http(),
     [celoAlfajores.id]: http(),
     [mainnet.id]: http(),
@@ -173,7 +188,7 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
           <RainbowKitProvider
             theme={customTheme}
             modalSize="compact"
-            initialChain={celoAlfajores}
+            initialChain={celoSepolia}
             showRecentTransactions={true}
             coolMode={true}
           >
