@@ -35,7 +35,7 @@ Celution enforces fairness and security by combining:
 3. **Verifiable AI + reputation** — AI agents assist with code analysis and PR review. Their computations are auditable, and their reputation is maintained on-chain.
 4. **Celo zk-based identity verification** — each user is verified via zero-knowledge proofs; a nullifier is mapped to each address to prevent duplicate accounts and ensure human contribution.
 
-![telegram-cloud-photo-size-5-6262564489895463555-y](https://github.com/user-attachments/assets/2570cd50-564e-4f43-8084-61db3cf45903)
+<img width="1078" height="542" alt="image" src="https://github.com/user-attachments/assets/62f485cf-6c26-44a0-9dd4-ef69ebf900f7" />
 
 ---
 
