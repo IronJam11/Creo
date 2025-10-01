@@ -1,416 +1,233 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowRight, Check, User, Mail, Building, Github, Wallet } from "lucide-react";
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import toast from 'react-hot-toast';
-
-const steps = [
-  {
-    id: 1,
-    title: "Welcome to Celution",
-    description: "Let's get you started with your journey",
-    icon: <User className="w-8 h-8" />,
-  },
-  {
-    id: 2,
-    title: "Connect Your Accounts",
-    description: "Link your GitHub and Celo wallet",
-    icon: <Wallet className="w-8 h-8" />,
-  },
-  {
-    id: 3,
-    title: "Personal Information",
-    description: "Tell us a bit about yourself",
-    icon: <Mail className="w-8 h-8" />,
-  },
-  {
-    id: 4,
-    title: "Setup Complete",
-    description: "You're all set to begin!",
-    icon: <Building className="w-8 h-8" />,
-  },
-];
+import { ArrowRight, User, Building, Github, Wallet, Zap, CheckCircle } from "lucide-react";
 
 export default function OnboardingPage() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    company: "",
-  });
-
-  const { data: session, status } = useSession();
-  const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleNext = () => {
-    // Validation for step 2 (connections)
-    if (currentStep === 2) {
-      if (!session) {
-        toast.error('Please connect your GitHub account to continue');
-        return;
-      }
-      if (!isConnected) {
-        toast.error('Please connect your Celo wallet to continue');
-        return;
-      }
-    }
-    
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handleGitHubConnect = async () => {
-    try {
-      await signIn('github');
-      toast.success('GitHub connected successfully!');
-    } catch (error) {
-      toast.error('Failed to connect GitHub');
-    }
-  };
-
-  useEffect(() => {
-    if (session && isConnected && currentStep === 2) {
-      toast.success('Both accounts connected! You can proceed to the next step.');
-    }
-  }, [session, isConnected, currentStep]);
-
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleComplete = () => {
-    console.log("Onboarding completed with data:", formData);
+  const handleGetStarted = () => {
     window.location.href = "/";
   };
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="text-center space-y-6">
-            <div className="w-32 h-32 mx-auto bg-[#7CC0FF] border-4 border-black shadow-celo flex items-center justify-center">
-              <User className="w-16 h-16 text-black" />
-            </div>
-            <div>
-              <h2 className="celo-heading-1 mb-4">
-                Welcome to Celution
-              </h2>
-              <p className="celo-body-large max-w-md mx-auto">
-                We're excited to have you on board. Let's take a few moments to set up your account and get you started.
-              </p>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-8">
-            <div className="text-center">
-              <div className="w-32 h-32 mx-auto bg-[#56DF7C] border-4 border-black shadow-celo flex items-center justify-center mb-6">
-                <Wallet className="w-16 h-16 text-black" />
-              </div>
-              <h2 className="celo-heading-1 mb-4">
-                Connect Your Accounts
-              </h2>
-              <p className="celo-body-large mb-8">
-                Link your GitHub and Celo wallet to get started
-              </p>
-            </div>
-
-            <div className="max-w-md mx-auto space-y-6">
-              {/* GitHub Connection */}
-              <div className="bg-white border-4 border-black shadow-celo p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <Github className="w-8 h-8 text-black" />
-                    <div>
-                      <h3 className="celo-heading-5">GitHub</h3>
-                      <p className="celo-body-small text-gray-600">Connect your GitHub account</p>
-                    </div>
-                  </div>
-                  {session ? (
-                    <Check className="w-8 h-8 text-green-600" />
-                  ) : null}
-                </div>
-                
-                {session ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-green-50 border-2 border-green-200">
-                      <span className="font-medium text-green-800">
-                        Connected as @{session.user?.githubUsername}
-                      </span>
-                      <Button
-                        onClick={() => signOut()}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-300 text-red-600 hover:bg-red-50"
-                      >
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={handleGitHubConnect}
-                    className="w-full bg-black text-[#FCFF52] hover:bg-gray-800 border-2 border-black rounded-none font-bold"
-                  >
-                    <Github className="w-5 h-5 mr-2" />
-                    Connect GitHub
-                  </Button>
-                )}
-              </div>
-
-              {/* Wallet Connection */}
-              <div className="bg-white border-4 border-black shadow-celo p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <Wallet className="w-8 h-8 text-black" />
-                    <div>
-                      <h3 className="celo-heading-5">Celo Wallet</h3>
-                      <p className="celo-body-small text-gray-600">Connect your Celo wallet</p>
-                    </div>
-                  </div>
-                  {isConnected ? (
-                    <Check className="w-8 h-8 text-green-600" />
-                  ) : null}
-                </div>
-                
-                {isConnected ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-green-50 border-2 border-green-200">
-                      <span className="font-medium text-green-800">
-                        {address?.slice(0, 6)}...{address?.slice(-4)}
-                      </span>
-                      <Button
-                        onClick={() => disconnect()}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-300 text-red-600 hover:bg-red-50"
-                      >
-                        Disconnect
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-[#B490FF] border-2 border-black shadow-celo-sm p-2 rounded-none">
-                    <ConnectButton />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-32 h-32 mx-auto bg-[#FF9A51] border-4 border-black shadow-celo flex items-center justify-center mb-6">
-                <Mail className="w-16 h-16 text-black" />
-              </div>
-              <h2 className="celo-heading-1 mb-4">
-                Personal Information
-              </h2>
-              <p className="celo-body-large mb-8">
-                Help us personalize your experience
-              </p>
-            </div>
-            <div className="space-y-4 max-w-md mx-auto">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="firstName" className="celo-label block mb-2">
-                    First Name
-                  </label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your first name"
-                    className="w-full border-2 border-black focus:ring-0 focus:border-black rounded-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="celo-label block mb-2">
-                    Last Name
-                  </label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Enter your last name"
-                    className="w-full border-2 border-black focus:ring-0 focus:border-black rounded-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="email" className="celo-label block mb-2">
-                  Email Address
-                </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email"
-                  className="w-full border-2 border-black focus:ring-0 focus:border-black rounded-none"
-                />
-              </div>
-              <div>
-                <label htmlFor="company" className="celo-label block mb-2">
-                  Company (Optional)
-                </label>
-                <Input
-                  id="company"
-                  name="company"
-                  type="text"
-                  value={formData.company}
-                  onChange={handleInputChange}
-                  placeholder="Enter your company name"
-                  className="w-full border-2 border-black focus:ring-0 focus:border-black rounded-none"
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="text-center space-y-6">
-            <div className="w-32 h-32 mx-auto bg-[#329F3B] border-4 border-black shadow-celo flex items-center justify-center">
-              <Check className="w-16 h-16 text-white stroke-[3]" />
-            </div>
-            <div>
-              <h2 className="celo-heading-1 mb-4">
-                All Set!
-              </h2>
-              <p className="celo-body-large max-w-md mx-auto mb-6">
-                Congratulations! Your account has been set up successfully. You're now ready to explore all the features Celution has to offer.
-              </p>
-              <div className="bg-[#FCFF52] border-4 border-black shadow-celo p-6 max-w-md mx-auto">
-                <h3 className="celo-heading-4 mb-4">Your Details:</h3>
-                <div className="text-left space-y-2 celo-body">
-                  <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
-                  <p><strong>Email:</strong> {formData.email}</p>
-                  {formData.company && <p><strong>Company:</strong> {formData.company}</p>}
-                  <p><strong>GitHub:</strong> @{session?.user?.githubUsername}</p>
-                  <p><strong>Wallet:</strong> {address?.slice(0, 6)}...{address?.slice(-4)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#FCFF52] flex items-center justify-center p-4 font-gt-alpina">
-      <div className="w-full max-w-2xl">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 border-black ${
-                    currentStep >= step.id
-                      ? "bg-black text-[#F9FF00]"
-                      : "bg-white text-black"
-                  }`}
-                >
-                  {currentStep > step.id ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    step.id
-                  )}
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-20 h-1 mx-4 ${
-                      currentStep > step.id ? "bg-black" : "bg-gray-300"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
+    <div className="min-h-screen bg-[#FCFF52] font-gt-alpina">
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-6 py-50">
+        <div className="text-center space-y-8">
+          {/* Hero Icon */}
+          
+          {/* Hero Content - Onyx on Prosperity Yellow */}
+          <div className="max-w-4xl mx-auto">
+
+            
+            <h1 className="celo-display-thin text-black mb-6 italic">
+              Welcome to Celution
+            </h1>
+            
+            <p className="celo-body-large text-black max-w-3xl mx-auto mb-12">
+              Your comprehensive <em className="italic">purpose-driven</em> platform for building on the Celo blockchain. Connect with GitHub, deploy smart contracts, and create decentralized applications with our integrated development tools.
+            </p>
+            
+            <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+              <Button 
+                onClick={handleGetStarted}
+                className="bg-black text-[#FCFF52] px-8 py-4 border-4 border-black hover:bg-gray-800 rounded-none font-bold text-lg shadow-celo"
+              >
+                <ArrowRight className="w-5 h-5 mr-2" />
+                Start Building
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="bg-white text-black px-8 py-4 border-4 border-black hover:bg-black hover:text-[#FCFF52] rounded-none font-bold text-lg shadow-celo"
+              >
+                <Github className="w-5 h-5 mr-2" />
+                Connect GitHub
+              </Button>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm text-black font-bold">
-              Step {currentStep} of {steps.length}
+        </div>
+      </section>
+      {/* Features Section - Onyx on Prosperity Yellow */}
+      <section className="bg-[#FCFF52] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="celo-heading-1 text-black mb-6 italic">
+              Platform Features
+            </h2>
+            <p className="celo-body-large text-black max-w-2xl mx-auto">
+              Everything you need to build, deploy, and manage applications on the Celo blockchain
             </p>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white border-4 border-black shadow-celo-lg p-8">
-          {renderStepContent()}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-8">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 1}
-              className="px-6 font-bold border-2 border-black hover:bg-black hover:text-[#F9FF00] rounded-none disabled:opacity-30"
-            >
-              Previous
-            </Button>
-
-            <div className="flex gap-2">
-              {steps.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full ${
-                    currentStep === index + 1 ? "bg-black" : "bg-gray-300"
-                  }`}
-                />
-              ))}
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Smart Contracts */}
+            <div className="bg-[#7CC0FF] border-4 border-black shadow-celo p-8 hover:shadow-celo-lg hover:translate-x-1 hover:translate-y-1 transition-all">
+              <div className="bg-black border-2 border-black p-4 w-fit mx-auto mb-6 shadow-celo-sm">
+                <Building className="w-12 h-12 text-[#FCFF52]" />
+              </div>
+              <h3 className="celo-heading-5 text-black mb-4 text-center">Smart Contracts</h3>
+              <p className="celo-body-small text-black text-center">
+                Deploy and interact with smart contracts using Solidity and Foundry
+              </p>
             </div>
 
-            {currentStep < steps.length ? (
-              <Button 
-                onClick={handleNext} 
-                className="px-6 font-bold bg-black text-[#FCFF52] hover:bg-gray-800 border-2 border-black rounded-none"
-              >
-                Next
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleComplete} 
-                className="px-6 font-bold bg-black text-[#FCFF52] hover:bg-gray-800 border-2 border-black rounded-none"
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            )}
+            {/* GitHub Integration */}
+            <div className="bg-[#FF9A51] border-4 border-black shadow-celo p-8 hover:shadow-celo-lg hover:translate-x-1 hover:translate-y-1 transition-all">
+              <div className="bg-black border-2 border-black p-4 w-fit mx-auto mb-6 shadow-celo-sm">
+                <Github className="w-12 h-12 text-[#FCFF52]" />
+              </div>
+              <h3 className="celo-heading-5 text-black mb-4 text-center">GitHub Integration</h3>
+              <p className="celo-body-small text-black text-center">
+                Seamlessly connect your development workflow with GitHub repositories
+              </p>
+            </div>
+
+            {/* Wallet Tools */}
+            <div className="bg-[#56DF7C] border-4 border-black shadow-celo p-8 hover:shadow-celo-lg hover:translate-x-1 hover:translate-y-1 transition-all">
+              <div className="bg-black border-2 border-black p-4 w-fit mx-auto mb-6 shadow-celo-sm">
+                <Wallet className="w-12 h-12 text-[#FCFF52]" />
+              </div>
+              <h3 className="celo-heading-5 text-black mb-4 text-center">Wallet Management</h3>
+              <p className="celo-body-small text-black text-center">
+                Manage transactions and interact with DeFi protocols on Celo
+              </p>
+            </div>
+
+            {/* Analytics */}
+            <div className="bg-[#B490FF] border-4 border-black shadow-celo p-8 hover:shadow-celo-lg hover:translate-x-1 hover:translate-y-1 transition-all">
+              <div className="bg-black border-2 border-black p-4 w-fit mx-auto mb-6 shadow-celo-sm">
+                <CheckCircle className="w-12 h-12 text-[#FCFF52]" />
+              </div>
+              <h3 className="celo-heading-5 text-black mb-4 text-center">Analytics & Monitoring</h3>
+              <p className="celo-body-small text-black text-center">
+                Track your project's performance and usage metrics
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* How It Works Section - Onyx on Prosperity Yellow */}
+      <section className="bg-[#FCFF52] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="celo-heading-1 text-black mb-6 italic">
+              How It Works
+            </h2>
+            <p className="celo-body-large text-black max-w-2xl mx-auto">
+              Get started with Celution in three simple steps
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto bg-[#329F3B] border-4 border-black shadow-celo flex items-center justify-center mb-6">
+                <span className="celo-heading-4 text-white">1</span>
+              </div>
+              <h3 className="celo-heading-4 text-black mb-4">Connect Your Accounts</h3>
+              <p className="celo-body text-black">
+                Use the navbar to connect your GitHub account and Celo wallet to get started
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto bg-[#7CC0FF] border-4 border-black shadow-celo flex items-center justify-center mb-6">
+                <span className="celo-heading-4 text-black">2</span>
+              </div>
+              <h3 className="celo-heading-4 text-black mb-4">Set Up Your Project</h3>
+              <p className="celo-body text-black">
+                Create or import your project repository and configure your smart contract deployment
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto bg-[#FF9A51] border-4 border-black shadow-celo flex items-center justify-center mb-6">
+                <span className="celo-heading-4 text-black">3</span>
+              </div>
+              <h3 className="celo-heading-4 text-black mb-4">Deploy & Monitor</h3>
+              <p className="celo-body text-black">
+                Deploy your contracts to Celo and monitor performance with our analytics dashboard
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section - Snow on Fig */}
+      <section className="bg-[#1E002B] text-white py-20">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="celo-heading-1 mb-6 text-white italic">
+            Ready to Build on Celo?
+          </h2>
+          <p className="celo-body-large mb-8 text-white opacity-90">
+            Join the Celo ecosystem and start building <em className="italic">purpose-driven</em> decentralized applications that create the conditions for prosperity for everyone.
+          </p>
+          
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+            <Button 
+              onClick={handleGetStarted}
+              className="bg-[#FCFF52] text-black px-8 py-4 border-4 border-[#FCFF52] hover:bg-[#F0F52D] rounded-none font-bold text-lg shadow-celo"
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Launch Platform
+            </Button>
+            
+            <Button 
+              variant="outline"
+              className="bg-transparent text-white px-8 py-4 border-4 border-white hover:bg-white hover:text-black rounded-none font-bold text-lg"
+            >
+              <Building className="w-5 h-5 mr-2" />
+              View Documentation
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer - Onyx on Prosperity Yellow */}
+      <footer className="bg-[#FCFF52] py-12">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="celo-heading-5 text-black mb-4">Celution</h3>
+              <p className="celo-body-small text-black">
+                Your comprehensive platform for building on the Celo blockchain with integrated development tools.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="celo-label text-black mb-4">Platform</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">Smart Contracts</a></li>
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">GitHub Integration</a></li>
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">Wallet Tools</a></li>
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">Analytics</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="celo-label text-black mb-4">Resources</h4>
+              <ul className="space-y-2">
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">Documentation</a></li>
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">GitHub</a></li>
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">Community</a></li>
+                <li><a href="#" className="celo-body-small text-black hover:text-gray-700">Support</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="celo-heading-5 text-black">CELUTION</div>
+              <div className="celo-body-small text-black">
+                Built with ❤️ for the Celo ecosystem
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
