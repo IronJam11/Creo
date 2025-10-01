@@ -37,16 +37,8 @@ export function Navbar() {
       <div className="flex h-20 items-center px-6">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white border-2 border-black shadow-celo-sm flex items-center justify-center">
-              <Image 
-                src={LOGO_PATH} 
-                alt="Logo" 
-                width={24} 
-                height={24}
-                className="w-6 h-6"
-              />
-            </div>
-            <span className={`text-2xl font-bold text-black ${WEBSITE_FONT}`}>
+            
+            <span className={`text-4xl text-black ${WEBSITE_FONT} tracking-tight`}>
               {WEBSITE_NAME}
             </span>
           </Link>
@@ -58,7 +50,7 @@ export function Navbar() {
                 <NavigationMenuLink asChild>
                   <Link 
                     href="/" 
-                    className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none"
+                    className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-gray-100 hover:shadow-celo transition-all duration-200 rounded-none hover:-translate-y-0.5"
                   >
                     Home
                   </Link>
@@ -69,55 +61,15 @@ export function Navbar() {
                 <NavigationMenuLink asChild>
                   <Link 
                     href="/about" 
-                    className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none"
+                    className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-gray-100 hover:shadow-celo transition-all duration-200 rounded-none hover:-translate-y-0.5"
                   >
                     About
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link 
-                    href="/docs" 
-                    className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none"
-                  >
-                    Docs
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none data-[state=open]:bg-black data-[state=open]:text-[#FCFF52]">
-                  Services
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] bg-[#FF9A51] border-4 border-black shadow-celo rounded-none">
-                    <NavigationMenuLink asChild>
-                      <Link
-                        href="/services/web-dev"
-                        className="block select-none space-y-2 bg-white border-2 border-black shadow-celo-sm p-4 leading-none no-underline outline-none transition-colors hover:bg-black hover:text-[#FCFF52] rounded-none"
-                      >
-                        <div className="text-lg font-bold leading-none">Web Development</div>
-                        <p className="line-clamp-2 text-sm leading-snug font-medium">
-                          Build modern web applications
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link
-                        href="/services/consulting"
-                        className="block select-none space-y-2 bg-white border-2 border-black shadow-celo-sm p-4 leading-none no-underline outline-none transition-colors hover:bg-black hover:text-[#FCFF52] rounded-none"
-                      >
-                        <div className="text-lg font-bold leading-none">Consulting</div>
-                        <p className="line-clamp-2 text-sm leading-snug font-medium">
-                          Expert technical consulting
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+              
             </NavigationMenuList>
           </NavigationMenu>
           
@@ -173,9 +125,111 @@ export function Navbar() {
             {/* Wallet Status */}
             <div className="flex items-center gap-2">
               {mounted ? (
-                <div className="border-2 border-black shadow-celo-sm rounded-none overflow-hidden">
-                  <ConnectButton showBalance={false} />
-                </div>
+                <ConnectButton.Custom>
+                  {({
+                    account,
+                    chain,
+                    openAccountModal,
+                    openChainModal,
+                    openConnectModal,
+                    authenticationStatus,
+                    mounted: connectMounted,
+                  }) => {
+                    const ready = connectMounted && authenticationStatus !== 'loading';
+                    const connected =
+                      ready &&
+                      account &&
+                      chain &&
+                      (!authenticationStatus ||
+                        authenticationStatus === 'authenticated');
+
+                    return (
+                      <div
+                        {...(!ready && {
+                          'aria-hidden': true,
+                          'style': {
+                            opacity: 0,
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                          },
+                        })}
+                      >
+                        {(() => {
+                          if (!connected) {
+                            return (
+                              <button
+                                onClick={openConnectModal}
+                                className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none"
+                              >
+                                <Wallet className="w-5 h-5 mr-2" />
+                                Connect Wallet
+                              </button>
+                            );
+                          }
+
+                          if (chain.unsupported) {
+                            return (
+                              <button
+                                onClick={openChainModal}
+                                className="inline-flex h-12 w-max items-center justify-center bg-[#E70532] px-6 py-3 text-base font-bold text-white border-2 border-black shadow-celo-sm hover:bg-red-600 transition-all duration-200 rounded-none"
+                              >
+                                <AlertCircle className="w-5 h-5 mr-2" />
+                                Wrong Network
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={openChainModal}
+                                className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none"
+                              >
+                                {chain.hasIcon && (
+                                  <div
+                                    style={{
+                                      background: chain.iconBackground,
+                                      width: 20,
+                                      height: 20,
+                                      borderRadius: 999,
+                                      overflow: 'hidden',
+                                      marginRight: 8,
+                                    }}
+                                  >
+                                    {chain.iconUrl && (
+                                      <img
+                                        alt={chain.name ?? 'Chain icon'}
+                                        src={chain.iconUrl}
+                                        style={{ width: 20, height: 20 }}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+                                {chain.name}
+                                <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+
+                              <button
+                                onClick={openAccountModal}
+                                className="inline-flex h-12 w-max items-center justify-center bg-white px-6 py-3 text-base font-bold text-black border-2 border-black shadow-celo-sm hover:bg-black hover:text-[#FCFF52] transition-all duration-200 rounded-none"
+                              >
+                                <div className="w-5 h-5 bg-[#FF6B9D] rounded-full mr-2 flex items-center justify-center">
+                                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                                </div>
+                                {account.displayName}
+                                <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  }}
+                </ConnectButton.Custom>
               ) : (
                 // Skeleton/placeholder during hydration
                 <div className="bg-gray-200 border-2 border-black shadow-celo-sm px-3 py-2 animate-pulse">

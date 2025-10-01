@@ -1,5 +1,6 @@
 /* Font Imports - Must be first */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -142,7 +143,7 @@
 
 /* Celo Typography Hierarchy */
 .celo-heading-1 {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Playfair Display', serif;
   font-weight: 700;
   font-size: 3.75rem; /* 60px */
   line-height: 1.1;
@@ -151,7 +152,7 @@
 }
 
 .celo-heading-2 {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Playfair Display', serif;
   font-weight: 700;
   font-size: 3rem; /* 48px */
   line-height: 1.2;
@@ -160,7 +161,7 @@
 }
 
 .celo-heading-3 {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Playfair Display', serif;
   font-weight: 700;
   font-size: 2.25rem; /* 36px */
   line-height: 1.3;
@@ -168,23 +169,23 @@
 }
 
 .celo-heading-4 {
-  font-family: 'GT Alpina', serif;
-  font-weight: 500;
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
   font-size: 1.875rem; /* 30px */
   line-height: 1.3;
   color: var(--celo-onyx);
 }
 
 .celo-heading-5 {
-  font-family: 'GT Alpina', serif;
-  font-weight: 500;
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
   font-size: 1.5rem; /* 24px */
   line-height: 1.4;
   color: var(--celo-onyx);
 }
 
 .celo-body-large {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 400;
   font-size: 1.25rem; /* 20px */
   line-height: 1.6;
@@ -192,7 +193,7 @@
 }
 
 .celo-body {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 400;
   font-size: 1rem; /* 16px */
   line-height: 1.6;
@@ -200,7 +201,7 @@
 }
 
 .celo-body-small {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 400;
   font-size: 0.875rem; /* 14px */
   line-height: 1.5;
@@ -208,15 +209,15 @@
 }
 
 .celo-caption {
-  font-family: 'GT Alpina', serif;
-  font-weight: 300;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
   font-size: 0.75rem; /* 12px */
   line-height: 1.4;
   color: var(--celo-wood);
 }
 
 .celo-label {
-  font-family: 'GT Alpina', serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 700;
   font-size: 0.875rem; /* 14px */
   line-height: 1.4;
@@ -227,8 +228,8 @@
 
 /* Thin weight variations for special use cases */
 .celo-display-thin {
-  font-family: 'GT Alpina', serif;
-  font-weight: 100;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
   font-size: 4rem; /* 64px */
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -236,8 +237,8 @@
 }
 
 .celo-display-thin-italic {
-  font-family: 'GT Alpina', serif;
-  font-weight: 100;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
   font-style: italic;
   font-size: 4rem; /* 64px */
   line-height: 1.1;
@@ -257,4 +258,11 @@
     color: var(--foreground);
     font-family: 'GT Alpina', 'Inter', system-ui, sans-serif;
   }
+}
+
+/* Display Font Class */
+.font-display {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-style: normal;
 }

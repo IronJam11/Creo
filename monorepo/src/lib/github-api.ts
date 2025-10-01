@@ -185,6 +185,43 @@ export class GitHubAPI {
 
   // Create a new issue
   async createIssue(owner: string, repo: string, issueData: CreateIssueParams): Promise<GitHubIssue> {
+    // Validate and clean the issue data
+    const cleanedIssueData = {
+      title: (issueData.title || '').trim(),
+      body: (issueData.body || '').trim(),
+      labels: Array.isArray(issueData.labels) ? 
+        [...new Set(issueData.labels)] // Remove duplicates
+          .filter(label => label && typeof label === 'string' && label.trim())
+          .map(label => label.trim())
+          .filter(label => label.length <= 50) // GitHub label length limit
+        : [],
+      assignees: Array.isArray(issueData.assignees) ? issueData.assignees.filter(assignee => assignee && typeof assignee === 'string' && assignee.trim()) : undefined,
+      milestone: issueData.milestone || undefined
+    };
+
+    // Remove undefined fields
+    Object.keys(cleanedIssueData).forEach(key => {
+      if (cleanedIssueData[key as keyof typeof cleanedIssueData] === undefined) {
+        delete cleanedIssueData[key as keyof typeof cleanedIssueData];
+      }
+    });
+
+    // Basic validation
+    if (!cleanedIssueData.title) {
+      throw new Error('Issue title is required and cannot be empty');
+    }
+
+    if (!cleanedIssueData.body) {
+      throw new Error('Issue description is required and cannot be empty');
+    }
+
+    console.log('Creating issue with data:', {
+      title: cleanedIssueData.title,
+      bodyLength: cleanedIssueData.body.length,
+      labels: cleanedIssueData.labels,
+      assignees: cleanedIssueData.assignees
+    });
+
     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
       method: 'POST',
       headers: {
@@ -192,7 +229,7 @@ export class GitHubAPI {
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(issueData),
+      body: JSON.stringify(cleanedIssueData),
     });
 
     if (!response.ok) {
@@ -202,7 +239,7 @@ export class GitHubAPI {
         statusText: response.statusText,
         error,
         url: `https://api.github.com/repos/${owner}/${repo}/issues`,
-        requestBody: issueData
+        requestBody: cleanedIssueData
       });
       
       if (response.status === 404) {
@@ -210,7 +247,23 @@ export class GitHubAPI {
       } else if (response.status === 403) {
         throw new Error(`Permission denied. You don't have write access to ${owner}/${repo} or your token doesn't have the required permissions.`);
       } else if (response.status === 422) {
-        const validationErrors = error.errors?.map((e: any) => e.message).join(', ') || 'Validation failed';
+        console.log('Detailed validation error:', error);
+        let validationErrors = 'Validation failed';
+        
+        if (error.errors && Array.isArray(error.errors)) {
+          validationErrors = error.errors.map((e: any) => {
+            if (e.field && e.message) {
+              return `${e.field}: ${e.message}`;
+            } else if (e.message) {
+              return e.message;
+            } else {
+              return JSON.stringify(e);
+            }
+          }).join(', ');
+        } else if (error.message) {
+          validationErrors = error.message;
+        }
+        
         throw new Error(`Issue creation failed: ${validationErrors}`);
       } else {
         throw new Error(`Failed to create issue: ${error.message || response.statusText} (${response.status})`);
@@ -355,35 +408,79 @@ export const createDifficultyLabels = async (accessToken: string, owner: string,
     { name: 'difficulty:medium', color: '7CC0FF', description: 'Feature implementations, moderate complexity' },
     { name: 'difficulty:hard', color: 'FF9A51', description: 'Complex features, architectural changes' },
     { name: 'bounty', color: 'FCFF52', description: 'Issue has blockchain bounty attached' },
-    { name: 'celution', color: 'B490FF', description: 'Managed by Celution platform' }
+    { name: 'creo', color: 'B490FF', description: 'Managed by Creo platform' }
   ];
 
-  for (const label of difficultyLabels) {
-    try {
-      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/labels`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(label),
-      });
+  // First, check which labels already exist
+  try {
+    const existingLabelsResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/labels`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 422 && errorData.errors?.[0]?.code === 'already_exists') {
-          console.log(`Label ${label.name} already exists`);
-        } else if (response.status === 404) {
-          console.warn(`Repository ${owner}/${repo} not found or no access for label creation`);
+    const existingLabels = existingLabelsResponse.ok ? await existingLabelsResponse.json() : [];
+    const existingLabelNames = new Set(existingLabels.map((label: any) => label.name));
+
+    // Only create labels that don't exist
+    const labelsToCreate = difficultyLabels.filter(label => !existingLabelNames.has(label.name));
+
+    if (labelsToCreate.length === 0) {
+      console.log('All required labels already exist');
+      return;
+    }
+
+    for (const label of labelsToCreate) {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/labels`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(label),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (response.status === 422) {
+            console.log(`Label ${label.name} already exists (race condition)`);
+          } else if (response.status === 404) {
+            console.warn(`Repository ${owner}/${repo} not found or no access for label creation`);
+          } else {
+            console.warn(`Failed to create label ${label.name}:`, response.status, errorData.message || response.statusText);
+          }
         } else {
+          console.log(`Successfully created label: ${label.name}`);
+        }
+      } catch (error) {
+        console.warn(`Error creating label ${label.name}:`, error);
+      }
+    }
+  } catch (error) {
+    console.warn('Error checking existing labels:', error);
+    // Fallback to original behavior if we can't check existing labels
+    for (const label of difficultyLabels) {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/labels`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(label),
+        });
+
+        if (!response.ok && response.status !== 422) {
+          const errorData = await response.json().catch(() => ({}));
           console.warn(`Failed to create label ${label.name}:`, response.status, errorData.message || response.statusText);
         }
-      } else {
-        console.log(`Successfully created label: ${label.name}`);
+      } catch (labelError) {
+        console.warn(`Error creating label ${label.name}:`, labelError);
       }
-    } catch (error) {
-      console.warn(`Error creating label ${label.name}:`, error);
     }
   }
 };

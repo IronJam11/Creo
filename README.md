@@ -1,4 +1,4 @@
-# Celution – a highly secure and verifiable open-source collaboration platform
+# Creo – a highly secure and verifiable open-source collaboration platform
 
 ![telegram-cloud-photo-size-5-6262564489895463556-y](https://github.com/user-attachments/assets/9f872e33-3233-4f3f-91c6-28ce6b3cb165)
 
@@ -10,7 +10,7 @@
 
 ## Introduction
 
-**Celution** is a blockchain-backed platform that makes open-source collaboration **trustless, fair, and secure**. It combines a **two-sided staking protocol** (repo owners + issue solvers) with **verifiable AI agents** and **Celo zk-based user verification** to prevent collusion, overruns, Sybil attacks, and human impersonation.
+**Creo** is a blockchain-backed platform that makes open-source collaboration **trustless, fair, and secure**. It combines a **two-sided staking protocol** (repo owners + issue solvers) with **verifiable AI agents** and **Celo zk-based user verification** to prevent collusion, overruns, Sybil attacks, and human impersonation.
 
 The result: predictable incentives, protected contributors (especially newbies), and verified AI assistance — all enforced via smart contracts and verifiable identity proofs.
 
@@ -28,7 +28,7 @@ The result: predictable incentives, protected contributors (especially newbies),
 
 ## High-level solution
 
-Celution enforces fairness and security by combining:
+Creo enforces fairness and security by combining:
 
 1. **Two-sided staking** — both repo owners and solvers stake tokens; stakes are returned or slashed depending on verifiable conditions.
 2. **Smart contract ↔ GitHub API reconciliation** — each issue is represented as a contract struct and continuously matched to live GitHub metadata to detect off-platform merges or abuse.
@@ -45,7 +45,7 @@ Celution enforces fairness and security by combining:
 
 * **Prevent collusion / copying:** Owners cannot safely bypass contributor PRs; stake remains locked until all issues are resolved on-platform.
 * **Prevent unauthorized merges:** Only assigned contributors can have their PRs merged. Any mismatch triggers stake slashing.
-* **Align incentives:** Owners are economically motivated to follow Celution’s flow, ensuring fairness.
+* **Align incentives:** Owners are economically motivated to follow Creo’s flow, ensuring fairness.
 
 ### Why solvers (issue assignees) stake
 
@@ -72,7 +72,7 @@ Celution enforces fairness and security by combining:
 
 ---
 
-## Why Celution is better than traditional platforms
+## Why Creo is better than traditional platforms
 
 * **Automated fairness:** No reliance on maintainers to release funds.
 * **Beginner protection:** Staked deadlines protect newcomers.
@@ -91,6 +91,6 @@ Celution enforces fairness and security by combining:
 
 ---
 
-This version highlights Celution’s **Celo zk identity layer** and maintains the core staking + AI framework while removing all references to 0G.
+This version highlights Creo’s **Celo zk identity layer** and maintains the core staking + AI framework while removing all references to 0G.
 
 ---
