@@ -7,59 +7,7 @@
 /* GT Alpina Font Family - Premium serif from Grilli Type Foundry */
 /* Note: Replace these with actual GT Alpina font files when licensed */
 
-@font-face {
-  font-family: 'GT Alpina';
-  src: url('/fonts/gt-alpina-thin.woff2') format('woff2'),
-       url('/fonts/gt-alpina-thin.woff') format('woff');
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina';
-  src: url('/fonts/gt-alpina-thin-italic.woff2') format('woff2'),
-       url('/fonts/gt-alpina-thin-italic.woff') format('woff');
-  font-weight: 100;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina';
-  src: url('/fonts/gt-alpina-light.woff2') format('woff2'),
-       url('/fonts/gt-alpina-light.woff') format('woff');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina';
-  src: url('/fonts/gt-alpina-regular.woff2') format('woff2'),
-       url('/fonts/gt-alpina-regular.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina';
-  src: url('/fonts/gt-alpina-medium.woff2') format('woff2'),
-       url('/fonts/gt-alpina-medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GT Alpina';
-  src: url('/fonts/gt-alpina-bold.woff2') format('woff2'),
-       url('/fonts/gt-alpina-bold.woff') format('woff');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
+/* GT Alpina font declarations - using fallbacks until actual fonts are added */
 
 @custom-variant dark (&:is(.dark *));
 
