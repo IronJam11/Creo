@@ -349,5 +349,9 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Pausable {
     function getContractBalance() external view returns (uint256) {
         return address(this).balance;
     }
+
+    function isAddressVerified(address _user) external view returns (bool) {
+        return addressToNullifier[_user] != 0;
+    }
     
 }
