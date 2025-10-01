@@ -1,5 +1,8 @@
 # Celution – a highly secure and verifiable open-source collaboration platform
 
+![telegram-cloud-photo-size-5-6262564489895463556-y](https://github.com/user-attachments/assets/9f872e33-3233-4f3f-91c6-28ce6b3cb165)
+
+
 **Gitbook Documentation:** *[Link TBD]*
 **Demo / Video:** *[Link TBD]*
 
@@ -31,6 +34,8 @@ Celution enforces fairness and security by combining:
 2. **Smart contract ↔ GitHub API reconciliation** — each issue is represented as a contract struct and continuously matched to live GitHub metadata to detect off-platform merges or abuse.
 3. **Verifiable AI + reputation** — AI agents assist with code analysis and PR review. Their computations are auditable, and their reputation is maintained on-chain.
 4. **Celo zk-based identity verification** — each user is verified via zero-knowledge proofs; a nullifier is mapped to each address to prevent duplicate accounts and ensure human contribution.
+
+![telegram-cloud-photo-size-5-6262564489895463555-y](https://github.com/user-attachments/assets/2570cd50-564e-4f43-8084-61db3cf45903)
 
 ---
 
