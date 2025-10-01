@@ -133,7 +133,7 @@ const wagmiConfig = createConfig({
   transports: {
     [celoSepolia.id]: http('https://forno.celo-sepolia.celo-testnet.org/'),
     [celo.id]: http(),
-    [celoAlfajores.id]: http(),
+    [celoSepolia.id]: http(),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [optimism.id]: http(),
