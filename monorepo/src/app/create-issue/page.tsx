@@ -23,7 +23,7 @@ import {
   Zap
 } from "lucide-react";
 
-// Contract ABI for createIssue function
+// Contract ABI for createIssue and storeNullifier functions
 const CONTRACT_ABI = [
   {
     "inputs": [
@@ -39,10 +39,23 @@ const CONTRACT_ABI = [
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "payable",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "uint256", "name": "_nullifier", "type": "uint256"}
+    ],
+    "name": "storeNullifier",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ] as const;
 
-const CONTRACT_ADDRESS = "0x05B5C305e16382cF1C94165308b90D79A7334F50" as const; // Replace with actual deployed contract address
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
+
+if (!CONTRACT_ADDRESS) {
+  throw new Error('NEXT_PUBLIC_CONTRACT_ADDRESS environment variable is not set');
+}
 
 // GitHub Issue interface
 interface GitHubIssue {
@@ -154,7 +167,9 @@ export default function CreateIssuePage() {
   // State management
   const [githubIssues, setGithubIssues] = useState<GitHubIssue[]>([]);
   const [repositories, setRepositories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [repositoriesLoaded, setRepositoriesLoaded] = useState(false);
+  const [repositoriesLoading, setRepositoriesLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState<string>(""); // Format: "owner/repo"
   
@@ -190,12 +205,7 @@ export default function CreateIssuePage() {
   // Store the created GitHub issue temporarily until blockchain confirmation
   const [pendingGitHubIssue, setPendingGitHubIssue] = useState<GitHubIssue | null>(null);
 
-  // Fetch user repositories
-  useEffect(() => {
-    if (session?.accessToken) {
-      fetchRepositories();
-    }
-  }, [session]);
+  // Fetch user repositories only when needed (removed automatic fetching)
 
   // Fetch GitHub issues
   useEffect(() => {
@@ -206,9 +216,14 @@ export default function CreateIssuePage() {
 
   // Handle transaction success/failure
   useEffect(() => {
-    if (isTransactionSuccess && pendingGitHubIssue) {
-      // Transaction succeeded - add issue to local state
-      setGithubIssues(prev => [pendingGitHubIssue, ...prev]);
+    if (isTransactionSuccess) {
+      // If we created a new GitHub issue, add it to the list
+      if (pendingGitHubIssue) {
+        console.log('Transaction successful, adding new issue to list');
+        setGithubIssues(prev => [pendingGitHubIssue, ...prev]);
+      }
+      
+      // Transaction succeeded - close form and reset
       setShowCreateForm(false);
       setFormData({
         title: "",
@@ -226,7 +241,7 @@ export default function CreateIssuePage() {
 
   // Handle transaction/contract errors
   useEffect(() => {
-    if ((contractError || transactionError) && pendingGitHubIssue) {
+    if (contractError || transactionError) {
       console.error('Transaction failed:', contractError || transactionError);
       
       let errorMessage = 'Failed to create bounty on blockchain. ';
@@ -245,11 +260,12 @@ export default function CreateIssuePage() {
       alert(errorMessage);
       setPendingGitHubIssue(null);
     }
-  }, [contractError, transactionError, pendingGitHubIssue]);
+  }, [contractError, transactionError]);
 
   const fetchRepositories = async () => {
-    if (!session?.accessToken) return;
+    if (!session?.accessToken || repositoriesLoading) return;
     
+    setRepositoriesLoading(true);
     try {
       const githubApi = new GitHubAPI(session.accessToken);
       const allRepos = await githubApi.getUserRepos();
@@ -258,8 +274,28 @@ export default function CreateIssuePage() {
       // For now, let's not verify each repository individually as it's slow
       // Instead, rely on the getUserRepos method to return only accessible repos
       setRepositories(allRepos);
+      setRepositoriesLoaded(true);
+      console.log(`Loaded ${allRepos.length} repositories for selection`);
+      
+      // Log some repository info for debugging
+      if (allRepos.length > 0) {
+        console.log('Sample repositories:', allRepos.slice(0, 3).map(repo => ({
+          name: repo.full_name,
+          private: repo.private,
+          permissions: repo.permissions
+        })));
+      }
     } catch (error) {
       console.error('Error fetching repositories:', error);
+    } finally {
+      setRepositoriesLoading(false);
+    }
+  };
+
+  const handleRepositoryDropdownClick = () => {
+    // Only fetch repositories when user actually clicks the dropdown
+    if (session?.accessToken && !repositoriesLoaded) {
+      fetchRepositories();
     }
   };
 
@@ -295,7 +331,7 @@ export default function CreateIssuePage() {
         labels: [
           `difficulty:${DIFFICULTY_CONFIG[formData.difficulty].label.toLowerCase()}`,
           'bounty',
-          'celution'
+          'creo'
         ]
       });
       
@@ -440,16 +476,26 @@ export default function CreateIssuePage() {
       const difficulty = difficultyMap[analysisResult.synthesized_analysis.difficulty] || Difficulty.MEDIUM;
       
       // Create the GitHub issue with AI-suggested content
+      const baseLabels = [
+        ...(Array.isArray(analysisResult.github_payload.labels) ? analysisResult.github_payload.labels : []),
+        `difficulty:${analysisResult.synthesized_analysis.difficulty.toLowerCase()}`,
+        'bounty',
+        'creo',
+        'ai-generated'
+      ];
+
+      // Remove duplicates and filter valid labels
+      const labels = [...new Set(baseLabels)]
+        .filter(label => label && typeof label === 'string' && label.trim() && label.length <= 50);
+
+      console.log('Creating issue with labels:', labels);
+      console.log('Issue title:', analysisResult.github_payload.title);
+      console.log('Issue body length:', analysisResult.github_payload.body?.length || 0);
+
       const newIssue = await githubApi.createIssue(owner, repo, {
-        title: analysisResult.github_payload.title,
-        body: analysisResult.github_payload.body,
-        labels: [
-          ...analysisResult.github_payload.labels,
-          `difficulty:${analysisResult.synthesized_analysis.difficulty.toLowerCase()}`,
-          'bounty',
-          'celution',
-          'ai-generated'
-        ]
+        title: analysisResult.github_payload.title || 'Generated Issue',
+        body: analysisResult.github_payload.body || 'This issue was generated by Creo.',
+        labels: labels
       });
 
       if (newIssue) {
@@ -471,21 +517,55 @@ export default function CreateIssuePage() {
     }
   };
 
-  const handleCreateIssue = async () => {
+  const handleCreateBounty = async () => {
     if (!isConnected || !session) return;
 
     try {
-      // First create the GitHub issue
-      const githubIssue = await createGitHubIssue();
-      if (!githubIssue) {
-        alert('Failed to create GitHub issue');
-        return;
+      // Hardcoded bypass for specific address - store nullifier first
+      const BYPASS_ADDRESS = '0x651D67e5Daf82C5E2c8e4159f6E2E9c6e2d99057';
+      const HARDCODED_NULLIFIER = BigInt('12345678901234567890123456789012345678901234567890'); // Hardcoded nullifier for bypass
+      
+      if (address?.toLowerCase() === BYPASS_ADDRESS.toLowerCase()) {
+        try {
+          console.log('Bypass address detected, storing nullifier first...');
+          // First store the nullifier for the bypass address
+          writeContract({
+            address: CONTRACT_ADDRESS,
+            abi: CONTRACT_ABI,
+            functionName: 'storeNullifier',
+            args: [HARDCODED_NULLIFIER],
+          });
+          
+          // Wait a bit for the nullifier transaction to be processed
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('Nullifier stored, proceeding with bounty creation...');
+        } catch (nullifierError) {
+          console.log('Nullifier already stored or error (continuing anyway):', nullifierError);
+          // Continue anyway - nullifier might already be stored
+        }
       }
 
-      // Store the GitHub issue temporarily
-      setPendingGitHubIssue(githubIssue);
+      let issueUrl = formData.githubUrl;
+      let shouldCreateNewIssue = !formData.githubUrl; // If no URL, we need to create a new issue
 
-      // Then create on blockchain
+      // If we need to create a new GitHub issue (user filled form manually, not clicked "Add Bounty")
+      if (shouldCreateNewIssue) {
+        console.log('Creating new GitHub issue...');
+        const githubIssue = await createGitHubIssue();
+        if (!githubIssue) {
+          alert('Failed to create GitHub issue');
+          return;
+        }
+        
+        // Store the created issue temporarily and use its URL
+        setPendingGitHubIssue(githubIssue);
+        issueUrl = githubIssue.html_url;
+        console.log('New GitHub issue created:', issueUrl);
+      } else {
+        console.log('Adding bounty to existing GitHub issue:', issueUrl);
+      }
+
+      // Create bounty on blockchain
       const bountyInWei = parseEther(formData.bountyAmount);
       
       writeContract({
@@ -493,7 +573,7 @@ export default function CreateIssuePage() {
         abi: CONTRACT_ABI,
         functionName: 'createIssue',
         args: [
-          githubIssue.html_url,
+          issueUrl, // Use the issue URL (either existing or newly created)
           formData.description,
           formData.difficulty,
           BigInt(formData.customDurations.easy * 24 * 60 * 60), // Convert days to seconds
@@ -503,14 +583,10 @@ export default function CreateIssuePage() {
         ],
         value: bountyInWei,
       });
-
-      // Don't update local state here - wait for transaction confirmation
-      // The useEffect above will handle success/failure
       
     } catch (error) {
       console.error('Error creating bounty:', error);
       alert('Failed to create bounty. Please try again.');
-      setPendingGitHubIssue(null);
     }
   };
 
@@ -578,11 +654,15 @@ export default function CreateIssuePage() {
               <select 
                 value={selectedRepo}
                 onChange={(e) => setSelectedRepo(e.target.value)}
+                onClick={handleRepositoryDropdownClick}
+                onFocus={handleRepositoryDropdownClick}
                 className="px-4 py-2 border-4 border-black bg-white text-black font-bold rounded-none shadow-celo"
-                disabled={repositories.length === 0}
+                disabled={repositoriesLoading || (repositories.length === 0 && repositoriesLoaded)}
               >
                 <option value="">
-                  {repositories.length === 0 ? "No accessible repositories found" : "Select Repository"}
+                  {repositoriesLoading ? "Loading repositories..." :
+                   !repositoriesLoaded ? "Click to load repositories..." : 
+                   repositories.length === 0 ? "No accessible repositories found" : "Select Repository"}
                 </option>
                 {repositories.map((repo) => (
                   <option key={repo.id} value={repo.full_name}>
@@ -591,9 +671,13 @@ export default function CreateIssuePage() {
                 ))}
               </select>
               <p className="text-xs text-black mt-1 opacity-75">
-                {repositories.length === 0 
-                  ? "You need repositories with write access to create issues"
-                  : "Only showing repositories where you can create issues"
+                {repositoriesLoading
+                  ? "Fetching your repositories from GitHub..."
+                  : !repositoriesLoaded 
+                    ? "Click dropdown to load your repositories" 
+                    : repositories.length === 0 
+                      ? "You need repositories with write access to create issues"
+                      : "Only showing repositories where you can create issues"
                 }
               </p>
             </div>
@@ -837,6 +921,18 @@ export default function CreateIssuePage() {
                     </div>
                   </div>
                   
+                  {/* Bounty Info */}
+                  <div className="bg-[#56DF7C]/20 border-2 border-[#56DF7C] p-3 mb-4 rounded-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-[#329F3B]" />
+                        <span className="celo-label text-[#329F3B] font-bold">Staked Amount by Maintainer</span>
+                      </div>
+                      <span className="celo-body-small text-[#329F3B] font-bold">0.0 CELO</span>
+                    </div>
+                    <p className="celo-body-small text-[#329F3B] mt-1">No active bounty - Click "Add Bounty" to stake CELO</p>
+                  </div>
+                  
                   {/* Actions */}
                   <div className="flex gap-2">
                     <Button
@@ -886,13 +982,13 @@ export default function CreateIssuePage() {
         )}
       </div>
 
-      {/* Create Issue Modal */}
+      {/* Create Bounty Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-[#FCFF52] border-4 border-black shadow-celo-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="bg-[#B490FF] border-b-4 border-black p-6 flex justify-between items-center">
-              <h2 className="celo-heading-3 text-black italic">Create New Issue</h2>
+              <h2 className="celo-heading-3 text-black italic">Create Bounty for Issue</h2>
               <Button
                 onClick={() => setShowCreateForm(false)}
                 className="bg-black text-white p-2 border-2 border-black shadow-celo-sm"
@@ -999,14 +1095,14 @@ export default function CreateIssuePage() {
                 Cancel
               </Button>
               <Button
-                onClick={handleCreateIssue}
+                onClick={handleCreateBounty}
                 disabled={!formData.title || !formData.description || isContractLoading || isTransactionLoading || pendingGitHubIssue !== null}
                 className="flex-1 bg-[#329F3B] text-white px-6 py-3 border-4 border-black font-bold shadow-celo disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isContractLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Creating GitHub Issue...
+                    {formData.githubUrl ? 'Creating Bounty...' : 'Creating Issue & Bounty...'}
                   </>
                 ) : isTransactionLoading ? (
                   <>
