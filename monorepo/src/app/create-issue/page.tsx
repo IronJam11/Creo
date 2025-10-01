@@ -181,11 +181,14 @@ export default function CreateIssuePage() {
   });
 
   // Contract interaction
-  const { data: contractWriteData, writeContract, isPending: isContractLoading } = useWriteContract();
+  const { data: contractWriteData, writeContract, isPending: isContractLoading, error: contractError } = useWriteContract();
 
-  const { isLoading: isTransactionLoading, isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isTransactionLoading, isSuccess: isTransactionSuccess, error: transactionError } = useWaitForTransactionReceipt({
     hash: contractWriteData,
   });
+
+  // Store the created GitHub issue temporarily until blockchain confirmation
+  const [pendingGitHubIssue, setPendingGitHubIssue] = useState<GitHubIssue | null>(null);
 
   // Fetch user repositories
   useEffect(() => {
@@ -200,6 +203,49 @@ export default function CreateIssuePage() {
       fetchGitHubIssues();
     }
   }, [session, selectedRepo]);
+
+  // Handle transaction success/failure
+  useEffect(() => {
+    if (isTransactionSuccess && pendingGitHubIssue) {
+      // Transaction succeeded - add issue to local state
+      setGithubIssues(prev => [pendingGitHubIssue, ...prev]);
+      setShowCreateForm(false);
+      setFormData({
+        title: "",
+        description: "",
+        githubUrl: "",
+        difficulty: Difficulty.EASY,
+        bountyAmount: "0.1",
+        customDurations: { easy: 0, medium: 0, hard: 0 },
+        minimumCompletionPercentage: 80
+      });
+      setPendingGitHubIssue(null);
+      alert('Bounty created successfully! 🎉');
+    }
+  }, [isTransactionSuccess, pendingGitHubIssue]);
+
+  // Handle transaction/contract errors
+  useEffect(() => {
+    if ((contractError || transactionError) && pendingGitHubIssue) {
+      console.error('Transaction failed:', contractError || transactionError);
+      
+      let errorMessage = 'Failed to create bounty on blockchain. ';
+      const error = contractError || transactionError;
+      
+      if (error?.message?.includes('User not verified')) {
+        errorMessage += 'Please verify your account first.';
+      } else if (error?.message?.includes('Insufficient payment')) {
+        errorMessage += 'Bounty amount must be greater than the AI service fee.';
+      } else if (error?.message?.includes('rejected')) {
+        errorMessage += 'Transaction was rejected by user.';
+      } else {
+        errorMessage += error?.message || 'Please try again.';
+      }
+      
+      alert(errorMessage);
+      setPendingGitHubIssue(null);
+    }
+  }, [contractError, transactionError, pendingGitHubIssue]);
 
   const fetchRepositories = async () => {
     if (!session?.accessToken) return;
@@ -448,6 +494,9 @@ export default function CreateIssuePage() {
         return;
       }
 
+      // Store the GitHub issue temporarily
+      setPendingGitHubIssue(githubIssue);
+
       // Then create on blockchain
       const bountyInWei = parseEther(formData.bountyAmount);
       
@@ -467,21 +516,13 @@ export default function CreateIssuePage() {
         value: bountyInWei,
       });
 
-      // Update local state
-      setGithubIssues(prev => [githubIssue, ...prev]);
-      setShowCreateForm(false);
-      setFormData({
-        title: "",
-        description: "",
-        githubUrl: "",
-        difficulty: Difficulty.EASY,
-        bountyAmount: "0.1",
-        customDurations: { easy: 0, medium: 0, hard: 0 },
-        minimumCompletionPercentage: 80
-      });
+      // Don't update local state here - wait for transaction confirmation
+      // The useEffect above will handle success/failure
       
     } catch (error) {
-      console.error('Error creating issue:', error);
+      console.error('Error creating bounty:', error);
+      alert('Failed to create bounty. Please try again.');
+      setPendingGitHubIssue(null);
     }
   };
 
@@ -971,18 +1012,23 @@ export default function CreateIssuePage() {
               </Button>
               <Button
                 onClick={handleCreateIssue}
-                disabled={!formData.title || !formData.description || isContractLoading || isTransactionLoading}
+                disabled={!formData.title || !formData.description || isContractLoading || isTransactionLoading || pendingGitHubIssue !== null}
                 className="flex-1 bg-[#329F3B] text-white px-6 py-3 border-4 border-black font-bold shadow-celo disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isContractLoading || isTransactionLoading ? (
+                {isContractLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Creating...
+                    Creating GitHub Issue...
+                  </>
+                ) : isTransactionLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Confirming Blockchain Transaction...
                   </>
                 ) : (
                   <>
                     <Zap className="w-5 h-5 mr-2" />
-                    Create Issue ({formData.bountyAmount} CELO)
+                    Create Bounty ({formData.bountyAmount} CELO)
                   </>
                 )}
               </Button>

@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
-import { mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia, celo, celoAlfajores } from 'wagmi/chains';
+import { mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia, celo } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RainbowKitProvider, connectorsForWallets, darkTheme } from '@rainbow-me/rainbowkit';
 import {
@@ -41,8 +41,33 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './AuthProvider';
 import '@rainbow-me/rainbowkit/styles.css';
 
+// Define Celo Sepolia testnet
+const celoSepolia = {
+  id: 11142220,
+  name: 'Celo Sepolia Testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'CELO',
+    symbol: 'CELO',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://forno.celo-sepolia.celo-testnet.org'],
+    },
+    public: {
+      http: ['https://forno.celo-sepolia.celo-testnet.org'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Celo Sepolia Explorer',
+      url: 'https://sepolia-blockscout.celo-testnet.org',
+    },
+  },
+  testnet: true,
+} as const;
 
-const chains = [celo, celoAlfajores, mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
+const chains = [celo, celoSepolia, mainnet, polygon, optimism, arbitrum, base, sepolia, baseSepolia] as const;
 
 const connectors = connectorsForWallets(
   [
@@ -118,7 +143,7 @@ const wagmiConfig = createConfig({
   connectors,
   transports: {
     [celo.id]: http(),
-    [celoAlfajores.id]: http(),
+    [celoSepolia.id]: http(),
     [mainnet.id]: http(),
     [polygon.id]: http(),
     [optimism.id]: http(),
@@ -173,7 +198,7 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
           <RainbowKitProvider
             theme={customTheme}
             modalSize="compact"
-            initialChain={celoAlfajores}
+            initialChain={celoSepolia}
             showRecentTransactions={true}
             coolMode={true}
           >
