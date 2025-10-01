@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import "@openzeppelin/utils/ReentrancyGuard.sol";
 import "@openzeppelin/access/Ownable.sol";
 import "@openzeppelin/utils/Pausable.sol";
 
-contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
+contract DecentralizedIssueTracker is ReentrancyGuard, Pausable {
     
     event IssueCreated(uint256 indexed issueId, address indexed creator, string githubIssueUrl, uint256 bounty, Difficulty difficulty);
     event IssueAssigned(uint256 indexed issueId, address indexed contributor, uint256 deadline);
@@ -25,7 +25,6 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         uint256 bounty;
         address assignedTo;
         bool isCompleted;
-        bool isAssigned;
         uint256 percentageCompleted;
         uint256 claimedPercentage;
         bool isUnderReview;
@@ -69,19 +68,19 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         _;
     }
     
-    constructor(address _aiAgentAddress) Ownable(msg.sender) {
+    constructor(address _aiAgentAddress) {
         require(_aiAgentAddress != address(0), "Invalid AI agent address");
         AI_AGENT_ADDRESS = _aiAgentAddress;
     }
 
 
-    function storeNullifier(address _user, uint256 _nullifier) external onlyAIAgent {
-        require(_user != address(0), "Invalid user address");
+    function storeNullifier( uint256 _nullifier) external  {
+        require(msg.sender != address(0), "Invalid user address");
         require(_nullifier > 0, "Invalid nullifier");
-        require(addressToNullifier[_user] == 0, "Nullifier already exists");
+        require(addressToNullifier[msg.sender] == 0, "Nullifier already exists");
         require(nullifierToAddress[_nullifier] == address(0), "Nullifier already mapped");
-        addressToNullifier[_user] = _nullifier;
-        nullifierToAddress[_nullifier] = _user;
+        addressToNullifier[msg.sender] = _nullifier;
+        nullifierToAddress[_nullifier] = msg.sender;
 
     }
     
@@ -116,7 +115,6 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
             bounty: bounty,
             assignedTo: address(0),
             isCompleted: false,
-            isAssigned: false,
             isUnderReview: false,
             percentageCompleted: 0, 
             claimedPercentage: 0,
@@ -140,8 +138,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         Issue storage issue = issues[_issueId];
         require(issue.bounty > 0, "Issue bounty has been depleted");
         require(issue.id != 0, "Issue does not exist");
-        require(!issue.isAssigned, "Issue already assigned");
-        require(!issue.isCompleted, "Issue already completed");
+        require(issue.assignedTo == address(0), "Issue already assigned");
         require(msg.sender != issue.creator, "Creator cannot assign issue to themselves");
         require(!hasAttemptedIssue[_issueId][msg.sender], "You have already attempted this issue");
         
@@ -160,7 +157,6 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         }
         
         issue.assignedTo = msg.sender;
-        issue.isAssigned = true;
         issue.deadline = deadline;
         
         hasAttemptedIssue[_issueId][msg.sender] = true;
@@ -176,7 +172,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
     function gradeIssueByAI(uint256 _issueId, uint256 _confidenceScore) external nonReentrant onlyAIAgent {
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         require(_confidenceScore <= 100, "Confidence score must be between 0 and 100");
         
@@ -187,7 +183,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
         require(msg.sender == issue.creator, "Only issue creator can complete issue");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         
         issue.isCompleted = true;
@@ -204,7 +200,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
         require(msg.sender == issue.creator, "Only issue creator can extend deadline");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         require(_time > 0, "Time extension must be greater than zero");
         
@@ -215,7 +211,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
         require(msg.sender == issue.creator, "Only issue creator can extend deadline");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         require(_difficulty > issue.difficulty, "New difficulty must be greater than previous");
         issue.difficulty = _difficulty;
@@ -225,7 +221,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
     function submitIssuePercentageClaim(uint256 _issueId, uint256 _claimedPercentage) external nonReentrant onlyVerified {
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         require(msg.sender == issue.assignedTo, "Only assigned contributor can submit percentage");
         require(_claimedPercentage > 0 && _claimedPercentage <= 100, "Invalid percentage");
@@ -237,7 +233,7 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
     function submitIssuePercentageClaimResponse(uint256 _issueId, bool _isAccepted) external nonReentrant onlyVerified{
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         require(msg.sender == issue.creator, "Only issue creator can respond to claim");
         require(issue.claimedPercentage > 0, "No claimed percentage to respond to");
@@ -252,12 +248,11 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
     function claimExpiredIssue(uint256 _issueId) external nonReentrant onlyVerified{
         Issue storage issue = issues[_issueId];
         require(issue.id != 0, "Issue does not exist");
-        require(issue.isAssigned, "Issue not assigned");
+        require(issue.assignedTo != address(0), "Issue not assigned");
         require(!issue.isCompleted, "Issue already completed");
         require(issue.assignedTo == msg.sender, "Only assigned contributor can claim");
         require(block.timestamp > issue.deadline, "Deadline has not passed");
         
-        issue.isAssigned = false;
         issue.assignedTo = address(0);
         issue.deadline = 0;
         issue.presentHackerConfidenceScore = 0;
@@ -311,48 +306,23 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
     
     
     function getIssueInfo(uint256 _issueId) external view returns (
-        uint256 id,
-        address creator,
-        string memory githubIssueUrl,
-        string memory description,
-        uint256 bounty,
-        address assignedTo,
-        bool isCompleted,
-        bool isAssigned,
-        uint256 percentageCompleted,
-        uint256 claimedPercentage,
-        bool isUnderReview,
-        uint256 createdAt,
-        Difficulty difficulty,
-        uint256 deadline,
-        uint256 easyDuration,
-        uint256 mediumDuration,
-        uint256 hardDuration,
-        uint256 presentHackerConfidenceScore,
-        uint256 minimumBountyCompletionPercentageForStakeReturn
+        Issue memory issue
     ) {
+        return issues[_issueId];
+    }
+
+    function getOrganisationIssues() external view returns (uint256[] memory) {
+        uint256 totalIssues = nextIssueId - 1;
+        uint256[] memory allIssues = new uint256[](totalIssues);
+        for (uint256 i = 1; i <= totalIssues; i++) {
+            allIssues[i - 1] = i;
+        }
+        return allIssues;
+    }
+
+    function getIssueDurations(uint256 _issueId) external view returns (uint256, uint256, uint256) {
         Issue storage issue = issues[_issueId];
-        return (
-            issue.id,
-            issue.creator,
-            issue.githubIssueUrl,
-            issue.description,
-            issue.bounty,
-            issue.assignedTo,
-            issue.isCompleted,
-            issue.isAssigned,
-            issue.percentageCompleted,
-            issue.claimedPercentage,
-            issue.isUnderReview,
-            issue.createdAt,
-            issue.difficulty,
-            issue.deadline,
-            issue.easyDuration,
-            issue.mediumDuration,
-            issue.hardDuration,
-            issue.presentHackerConfidenceScore,
-            issue.minimumBountyCompletionPercentageForStakeReturn
-        );
+        return (issue.easyDuration, issue.mediumDuration, issue.hardDuration);
     }
     
     function getCreatorIssues(address _creator) external view returns (uint256[] memory) {
@@ -373,15 +343,15 @@ contract DecentralizedIssueTracker is ReentrancyGuard, Ownable, Pausable {
     
     function isIssueExpired(uint256 _issueId) external view returns (bool) {
         Issue storage issue = issues[_issueId];
-        return issue.isAssigned && !issue.isCompleted && block.timestamp > issue.deadline;
+        return issue.assignedTo != address(0) && !issue.isCompleted && block.timestamp > issue.deadline;
     }
     
     function getContractBalance() external view returns (uint256) {
         return address(this).balance;
     }
-    
-    function updateAIAgentAddress(address _newAIAgent) external onlyOwner {
-        require(_newAIAgent != address(0), "Invalid AI agent address");
-        AI_AGENT_ADDRESS = _newAIAgent;
+
+    function isAddressVerified(address _user) external view returns (bool) {
+        return addressToNullifier[_user] != 0;
     }
+    
 }
